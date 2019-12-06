@@ -1,0 +1,15 @@
+SELECT * from chicago;
+
+/* Média dos houristas */
+SELECT AVG((valor_hora*horas_tipicas)*12) FROM chicago where salario_ou_hora = "Hourly";
+/* Média dos assalariados */
+SELECT AVG(salario_anual) FROM chicago where salario_ou_hora = "Salary";
+
+
+BEGIN TRANSACTION;
+
+	UPDATE chicago
+	SET valor_hora = valor_hora*1.82
+	WHERE salario_ou_hora = "Hourly";
+
+COMMIT;

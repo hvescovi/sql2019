@@ -1,0 +1,19 @@
+USE banco;
+SET @avgM := (select avg(anos_de_estudo)FROM rh WHERE sexo='Masculino');
+SET @avgF := (select avg(anos_de_estudo)FROM rh WHERE sexo='Feminino');
+SET @QTDM := (SELECT COUNT(*) FROM rh WHERE sexo='Masculino');
+SET @QTDF := (SELECT COUNT(*) FROM rh WHERE sexo='Feminino');
+
+SELECT (SQRT(SUM(POWER((i.anos_de_estudo - @avgM),2)/@QTDM))) AS 'Desvio Padrao',  
+			@avgM AS "Media", i.sexo AS "Sexo" 
+			FROM rh i WHERE i.sexo='Masculino'
+			UNION 
+SELECT (SQRT(SUM(POWER((i.anos_de_estudo - @avgF),2)/@QTDF))),  
+		@avgF AS "Media", i.sexo AS "Sexo"
+ 		FROM rh i WHERE i.sexo='Feminino';
+ 		
+ 		/*
+		 Na média os homens estudam mais, porem em desvio padrão, como os desvios padrão estão muito proximos
+		 não é possivel afirmar que homens estudam mais
+Alunos: José Alexandre, Bruno Cardoso e Thiago Alexandre.
+		 */

@@ -1,0 +1,71 @@
+DROP TABLE if EXISTS usuario;
+CREATE TABLE usuario(
+	id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+	nome VARCHAR(20) NOT NULL,
+	email VARCHAR(30) NOT NULL,
+	estado_origem VARCHAR(16) NOT null
+);
+
+DROP TABLE if EXISTS viagem;
+CREATE TABLE viagem(
+	id_viagem INT AUTO_INCREMENT PRIMARY KEY,
+	usuario INT NOT NULL,
+	data_viagem VARCHAR(10) NOT NULL,
+	estado_destino VARCHAR(16) NOT NULL
+);
+
+DROP TABLE if EXISTS periculosidade;
+CREATE TABLE periculosidade(
+	id_usuario INT NOT NULL,
+	data_viagem VARCHAR(10) NOT NULL
+);
+
+DROP TABLE if EXISTS periculosidade_log;
+CREATE TABLE periculosidade_log(
+	id_usuario INT NOT NULL,
+	data_viagem VARCHAR(10) NOT NULL
+);
+
+DELIMITER $$
+	DROP TRIGGER if EXISTS verificar_periculosidade;
+	CREATE TRIGGER verificar_periculosidade AFTER INSERT ON viagem
+	FOR EACH ROW
+	BEGIN
+		SET @viagem := (SELECT id_viagem FROM viagem ORDER BY id_viagem DESC LIMIT 1);
+		SET @destino := (SELECT estado_destino FROM viagem WHERE id_viagem=@viagem);
+		
+		SET @qtd := (SELECT SUM(dados.numero) FROM dados WHERE dados.estado=@destino GROUP BY dados.estado);
+		
+		if @qtd>100000 then
+			INSERT INTO periculosidade(id_usuario, data_viagem) VALUES 
+			((SELECT usuario FROM viagem WHERE id_viagem=@viagem),
+				(SELECT data_viagem FROM viagem WHERE id_viagem=@viagem));
+		END if;	
+	END$$
+
+	DROP TRIGGER if EXISTS periculosidade_no_log_exclusao;
+	CREATE TRIGGER periculosidade_no_log_exclusao BEFORE DELETE ON periculosidade
+	FOR EACH ROW
+	BEGIN
+		INSERT INTO periculosidade_log VALUES (old.id_usuario, old.data_viagem);
+	END$$
+DELIMITER ;
+
+INSERT INTO usuario VALUES (0,"Thiago","...","Santa Catarina");
+INSERT INTO usuario VALUES (0,"Alessandra","...","Paraiba");
+INSERT INTO usuario VALUES (0,"Jose","...","Santa Catarina");
+
+SELECT * FROM usuario;
+SELECT * FROM periculosidade;
+
+INSERT INTO viagem VALUES (0,2,"10-12-2019","Santa Catarina");
+INSERT INTO viagem VALUES (0,1,"03-01-2020","Paraiba");
+INSERT INTO viagem VALUES (0,3,"01-01-2020","Mato Grosso");
+
+SELECT * FROM viagem;
+SELECT * FROM periculosidade;
+
+DELETE FROM periculosidade WHERE id_usuario=3;
+
+SELECT * FROM periculosidade;
+SELECT * FROM periculosidade_log;

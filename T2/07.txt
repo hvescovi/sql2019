@@ -1,0 +1,28 @@
+create table incendios(
+	year int,
+	state varchar(200),
+	month varchar(200),
+	number int,
+	date varchar(200)
+);
+
+drop trigger if exists updt_inced;
+delimiter $
+create trigger updt_inced before update on dados
+for each row
+begin
+insert into incendios values (old.year, old.state, old.month, old.number, old.date);
+end$$
+delimiter ;
+
+drop trigger if exists del_inced;
+delimiter $
+
+create trigger t_del_inced before delete on dados
+for each row
+begin
+	insert into incendios_log values (old.year, old.state, old.month, old.number, old.date);
+end$
+delimiter ;
+
+

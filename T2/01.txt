@@ -1,0 +1,71 @@
+CREATE DATABASE trabalho2 CHARACTER SET latin1 COLLATE latin1_general_cs;
+
+USE trabalho2;
+
+CREATE TABLE usuario (
+	id bigint PRIMARY KEY,
+	nome varchar(100),
+	email varchar(100),
+	estado_origem varchar(100)
+);
+
+CREATE TABLE viagem (
+	id_usuario bigint,
+	data_viagem date,
+	estado_destino varchar(100)
+);
+
+CREATE table periculosidade(
+	id_usuario bigint,
+	data_viagem date
+);
+
+CREATE table periculosidade_historico(
+	id_usuario bigint,
+	data_viagem date
+);
+
+ALTER table periculosidade add foreign key (id_usuario) REFERENCES trabalho2.usuario(id);
+ALTER table periculosidade_historico add foreign key (id_usuario) REFERENCES trabalho2.usuario(id);
+ALTER table viagem ADD FOREIGN KEY (id_usuario) REFERENCES trabalho2.usuario(id);
+
+delimiter $
+CREATE PROCEDURE qtd_incendios(in estado varchar(100), in id_usuario bigint, in data_viagem date)
+BEGIN
+	set @quantidade = (SELECT SUM(`number`) from trabalho2.dados where state = estado);
+	
+	if @quantidade > 100000 THEN
+		INSERT into trabalho2.periculosidade(id_usuario, data_viagem) VALUES(id_usuario, data_viagem);
+	end if;
+END $
+delimiter ;
+
+delimiter $
+CREATE TRIGGER qtd_incendio after INSERT on trabalho2.viagem 
+for EACH ROW
+begin 
+	call qtd_incendios (NEW.estado_destino, NEW.id_usuario, NEW.data_viagem);
+end $
+delimiter ;
+
+-- Teste
+
+INSERT into usuario values (1, 'gabriel', 'bla@gmail.com', 'sc');
+
+SELECT SUM(`number`) from trabalho2.dados where state = 'Minas Gerais'
+
+INSERT into viagem (id_usuario, data_viagem, estado_destino) VALUES (1, CURRENT_DATE(), 'Minas Gerais');
+
+SELECT * from periculosidade
+
+
+delimiter $
+CREATE TRIGGER historico BEFORE DELETE on trabalho2.periculosidade 
+for EACH ROW
+begin 
+	insert into periculosidade_historico VALUES (OLD.id_usuario, old.data_viagem);
+end $
+delimiter ;
+
+DELETE from periculosidade WHERE id_usuario = 1;
+SELECT * from periculosidade_historico

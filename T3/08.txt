@@ -1,0 +1,45 @@
+-- Criar uma coluna com o valor total para testar o calculo do salário anual do horista
+select *, case when upper(salario_ou_hora) = 'HOURLY'
+then (horas_tipicas * valor_hora) * 12
+else salario_anual end as valortotal
+from chicago;
+
+-- mostra o salário médio anual de cada categoria
+select salario_ou_hora, avg(case when upper(salario_ou_hora) = 'HOURLY'
+then (horas_tipicas * valor_hora) * 12 
+else salario_anual end) as media
+from chicago
+group by salario_ou_hora;
+
+-- Primeira maneira para calcular o percentual a ser aplicado
+select salario_ou_hora, avg(case when upper(salario_ou_hora) = 'HOURLY'
+then ((horas_tipicas * (valor_hora * 4.7073113)) + (horas_tipicas * valor_hora)) * 12 
+else salario_anual end) as media
+from chicago
+group by salario_ou_hora;
+
+-- Segunda maneira usando transaction
+update chicago set valor_hora = valor_hora * 4.7073113 where upper(salario_ou_hora) = 'HOURLY';
+
+-- teste para ver se deu certo
+select salario_ou_hora, avg(case when upper(salario_ou_hora) = 'HOURLY'
+then (horas_tipicas * valor_hora) * 12 
+else salario_anual end) as media
+from chicago
+group by salario_ou_hora;
+
+-- Não funcionou, aplica rollback
+ROLLBACK;
+
+-- Relaiza nova alteração
+update chicago set valor_hora = valor_hora * 5.7073113 where upper(salario_ou_hora) = 'HOURLY';
+
+-- teste para ver se deu certo
+select salario_ou_hora, avg(case when upper(salario_ou_hora) = 'HOURLY'
+then (horas_tipicas * valor_hora) * 12 
+else salario_anual end) as media
+from chicago
+group by salario_ou_hora;
+
+-- deu certo comita
+COMMIT;

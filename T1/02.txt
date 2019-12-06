@@ -1,0 +1,14 @@
+SELECT 
+	(select avg(anos_de_estudo) from rh where sexo = "Masculino") as media_homens,
+	SQRT(
+		SUM(
+			POW(anos_de_estudo - (select avg(anos_de_estudo) from rh where sexo = "Masculino"), 2)
+		) / 
+	(select COUNT(sexo) from rh where sexo = "Masculino")) as desvio_padrao_homens,
+		(select avg(anos_de_estudo) from rh where sexo = "Feminino") as media_mulheres,
+	SQRT(
+		SUM(
+			POW(anos_de_estudo - (select avg(anos_de_estudo) from rh where sexo = "Feminino"), 2)
+		) / 
+	(select COUNT(sexo) from rh where sexo = "Feminino")) as desvio_padrao_mulheres
+from rh
